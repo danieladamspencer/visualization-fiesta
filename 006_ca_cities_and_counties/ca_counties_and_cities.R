@@ -7,7 +7,7 @@ source("useful.R")
 pct_change <- function(x) 100*((x - dplyr::lag(x)) / dplyr::lag(x))
 
 # Read the Excel spreadsheet ----
-ca_pop <- read.xlsx("005_ca_cities_and_counties/population_by_county_and_city_-_1970_to_2016_-_public_-_oct_27_2016.xlsx")
+ca_pop <- read.xlsx("006_ca_cities_and_counties/population_by_county_and_city_-_1970_to_2016_-_public_-_oct_27_2016.xlsx")
 names(ca_pop)[1:2] <- c("county","city")
 
 # Clean the dataset ----
@@ -91,16 +91,16 @@ sapply(unique(county_pct_change$year),function(each_year){
     geom_polygon(color = "black", fill = NA) + ggtitle(paste("California Population -",each_year)) + 
     scale_fill_gradient2(name = "Percent\nChange",limits = c(-10,10),low = "red",high = "green") + 
     theme_bw() + ditch_the_axes
-  png(filename = paste0("005_ca_cities_and_counties/map_images/pct_change_year_",each_year,".png"),
+  png(filename = paste0("006_ca_cities_and_counties/reddit/pct_change_year_",each_year,".png"),
       width = 7, height = 7,res = 150,units = "in")
-  left_right_footnote(out,"Dan Spencer [2018]","Data Source: http://www.counties.org/post/datapile")
+  left_right_footnote(out,"u/ninjasinthewind [2018]","Data Source: http://www.counties.org/post/datapile")
   dev.off()
 })
 
 # Merge the plots together in a gif ----
 library(magick)
-list.files("005_ca_cities_and_counties/map_images/",pattern = "*.png",full.names = TRUE) %>% 
+list.files("006_ca_cities_and_counties/reddit/",pattern = "*.png",full.names = TRUE) %>% 
   purrr::map(image_read) %>% 
   magick::image_join() %>% 
   magick::image_animate(fps = 2) %>% 
-  magick::image_write("005_ca_cities_and_counties/map_images/pct_change.gif")
+  magick::image_write("006_ca_cities_and_counties/reddit/pct_change.gif")
