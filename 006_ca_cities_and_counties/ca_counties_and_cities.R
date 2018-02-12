@@ -46,13 +46,19 @@ county_pct_change <- ca_county %>%
   dplyr::ungroup()
 
 # Take a look at all of the percent changes and highlight Santa Cruz ----
-county_pct_change %>% 
+line_plot <- county_pct_change %>% 
   ggplot() + geom_line(aes(x = year,y = pct,group = county)) +
   geom_line(data = dplyr::filter(county_pct_change,county == "Santa Cruz"),
             aes(x = year,y = pct),color = "red",lwd = 1.3) +
   labs(x = "Year",y = "Yearly Percent Change in Population") + 
   ggplot2::annotate("text",x = 2014, y = 2.5, label = "Santa Cruz", col = "red") + 
   ggtitle("California Counties") + theme_bw()
+png(filename = "006_ca_cities_and_counties/county_pop_line_plot.png")
+left_right_footnote(line_plot,
+                    "Dan Spencer [2018]",
+                    "Data Source: http://www.counties.org/post/datapile",
+                    size = 0.5)
+dev.off()
 
 # Make a map of the percent change ----
 
