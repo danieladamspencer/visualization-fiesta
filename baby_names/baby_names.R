@@ -1,3 +1,4 @@
+# Time series of counts of baby names ----
 library(tidyverse)
 source("useful.R")
 baby_names <- read.csv("baby_names/NationalNames.csv")
