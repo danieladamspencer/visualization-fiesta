@@ -19,3 +19,8 @@ cacao %>%
                             y = rating,
                             color = bean_type)) +
   theme_bw() + theme(legend.position = "none")
+
+mean_lm <- lm(rating ~ 1,data = cacao)
+step_scope <- list(lower = as.formula("rating ~ 1"),
+                   upper = as.formula("rating ~ review_date + percent_cocoa + company_location + general_origin"))
+step(mean_lm,direction = "forward",scope = step_scope)
