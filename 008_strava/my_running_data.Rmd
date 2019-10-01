@@ -1,0 +1,101 @@
+---
+title: "My Running Data"
+author: "Dan Spencer"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+I got into running a few years ago after spending too many long days working at a desk. In December 2016, I began tracking my runs using a running app called Strava. I started using this particular run-tracking app because I found that it does a pretty good job keeping track of all sorts of data, which you can then access yourself at a later date. In this particular document, I'll be cleaning my data aggregated by workout, creating a visualization to see if my speed is changing significantly over time, and then comparing my different runs to determine whether different shoes have a significant effect on my pace.
+
+## Cleaning the Data
+
+I downloaded my data directly from [Strava](https://www.strava.com/), and it came in a folder called `export_18831425`. Within this folder area number of spreadsheets and subfolders. I will focus on the `activities.csv` spreasheet for my analysis here.
+
+```{r}
+activities <- read.csv("export_18831425/activities.csv")
+names(activities) # This gives the names of the variables in the spreadsheet
+table(activities$Activity.Type)
+```
+
+My efforts today will focus on my running activities, and I'll only need to look at the `Activity.Date`, `Activity.Gear`, `Elapsed.Time`, and `Distance` variables, so I will begin by cleaning the data to match my needs.
+
+```{r}
+library(tidyverse)
+run_df <- activities %>% 
+  dplyr::filter(Activity.Type == "Run") %>% # Only look at runs
+  dplyr::select(Activity.Date, Activity.Gear, Elapsed.Time, Distance)
+head(run_df)
+```
+
+Something that I notice here is that the `Activity.Date` variable is not in a standard format. Since I'm only interested in the date when the runs took place, I can try to format the dates into a date format that can be recognized by R. I can also convert the `Elapsed.Time` from seconds to minutes, convert `Distance` from kilometers to miles, and find my pace by dividing the time in minutes by the distance in miles. I'll sum up the distances and times for any activities that occur on the same day to ensure I have a unique daily value.
+
+```{r}
+final_run_df <- run_df %>% 
+  dplyr::mutate(Date = substr(Activity.Date,1,12), # Get rid of the time information
+                Date = as.Date(Date,format = "%b %d, %Y")) %>%  # Get R to read as a date
+  dplyr::group_by(Date) %>% # Next, in case there are multiple runs in a day, group all of the data together
+  dplyr::summarize(Elapsed.Time = sum(Elapsed.Time),
+                   Distance = sum(Distance),
+                   Activity.Gear = first(Activity.Gear)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(Distance = Distance / 1.609, # Convert from km to miles
+                Minutes = Elapsed.Time / 60, # Convert from second to minutes
+                Pace = Minutes / Distance)
+```
+
+## Visualizing My Pace Through Time
+
+It might be interesting to see if I have gotten faster or slower through time over the past few years. Am I getting slower as I get older? 
+
+```{r}
+ggplot(final_run_df) +
+  geom_point(aes(x = Date, y = Pace)) + # Put the points on the graph
+  geom_smooth(aes(x = Date, y = Pace)) + # Plot a smoothed curve over the points
+  scale_y_continuous("Pace\n(minutes per mile)",breaks = seq(6,17)) + # Control where the grid lines are on the y-axis
+  ggtitle("Am I getting slower?") + # Adds a title
+  theme_bw() # Gives a nice, clean plot with minimal color
+```
+
+These data suggest that I was getting slower through time until around the beginning of 2019, when the trend reversed slightly. There are some hidden pieces of information here. First, I suffered an injury to my ankle in the summer of 2018, which slowed me down significantly as I recovered. I also suffered a mild muscle strain around March of 2019, which stopped my running completely for about two months. However, after my recovery I have taken smaller runs at a faster pace. 
+
+## Visualizing Distances per Day Through Time
+
+Something that has a large effect on pace is distance traveled. To this end, I can examine how the distances I have run have changed over time.
+
+```{r}
+ggplot(final_run_df) +
+  geom_point(aes(x = Date, y = Distance)) + # Put the points on the graph
+  geom_smooth(aes(x = Date, y = Distance)) + # Plot a smoothed curve over the points
+  scale_y_continuous("Distance\n(miles)") + # Control where the grid lines are on the y-axis
+  ggtitle("Am I running less distance?") + # Adds a title
+  theme_bw() # Gives a nice, clean plot with minimal color
+```
+
+From this plot, it's clear that I am running less on average in a given day. My injuries and recoveries are also clearly observable, as my distance drops down after each injury.
+
+## Do the Shoes Make a Difference?
+
+Now I'll see if I given pair of shoes makes me faster or slower. I'll begin by looking at a visualization of the data to see if there could be a difference.
+
+```{r}
+date_order_shoes <- final_run_df %>% 
+  dplyr::filter(Activity.Gear != "") %>% 
+  dplyr::group_by(Activity.Gear) %>% 
+  dplyr::summarize(first_worn = first(Date)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(date_rank = rank(first_worn))
+
+final_run_df %>% 
+  dplyr::filter(Activity.Gear != "") %>% 
+  dplyr::mutate(Activity.Gear = factor(as.character(Activity.Gear),
+                                       levels = as.character(date_order_shoes$Activity.Gear)[date_order_shoes$date_rank])) %>% 
+  ggplot() +
+  geom_boxplot(aes(y = Pace, x = Activity.Gear)) +
+  theme_bw()
+```
+
