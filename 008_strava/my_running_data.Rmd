@@ -6,6 +6,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(tinytex.verbose = TRUE)
 ```
 
 ## Background
@@ -24,7 +25,7 @@ table(activities$Activity.Type)
 
 My efforts today will focus on my running activities, and I'll only need to look at the `Activity.Date`, `Activity.Gear`, `Elapsed.Time`, and `Distance` variables, so I will begin by cleaning the data to match my needs.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 run_df <- activities %>% 
   dplyr::filter(Activity.Type == "Run") %>% # Only look at runs
@@ -83,19 +84,45 @@ From this plot, it's clear that I am running less on average in a given day. My 
 Now I'll see if I given pair of shoes makes me faster or slower. I'll begin by looking at a visualization of the data to see if there could be a difference.
 
 ```{r}
-date_order_shoes <- final_run_df %>% 
-  dplyr::filter(Activity.Gear != "") %>% 
-  dplyr::group_by(Activity.Gear) %>% 
-  dplyr::summarize(first_worn = first(Date)) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::mutate(date_rank = rank(first_worn))
+shoes_df <- final_run_df %>% 
+  dplyr::filter(Activity.Gear != "") %>% # Get rid of runs with no shoes listed
+  # Next, I'll change a shoe name to the correct name
+  dplyr::mutate(Activity.Gear = ifelse(Activity.Gear == "12", "Ghost", as.character(Activity.Gear)))
 
-final_run_df %>% 
-  dplyr::filter(Activity.Gear != "") %>% 
-  dplyr::mutate(Activity.Gear = factor(as.character(Activity.Gear),
-                                       levels = as.character(date_order_shoes$Activity.Gear)[date_order_shoes$date_rank])) %>% 
+# This part is important, as listing the shoes used by date may 
+# illustrate some patterns
+date_order_shoes <- shoes_df %>% 
+  dplyr::group_by(Activity.Gear) %>% 
+  dplyr::summarize(first_worn = first(Date)) %>% # Find the first date a given shoe was worn
+  dplyr::ungroup() %>% 
+  dplyr::mutate(date_rank = rank(first_worn)) %>% # Find the date rank for when shoes were first worn
+  dplyr::arrange(date_rank) # Arrange the data frame by the date rank
+
+shoes_df %>% 
+  dplyr::mutate(Activity.Gear = factor(as.character(Activity.Gear), # Changes the factor to order by date that the shoes were worn 
+                                       levels = as.character(date_order_shoes$Activity.Gear))) %>% 
   ggplot() +
   geom_boxplot(aes(y = Pace, x = Activity.Gear)) +
+  labs(y = "Pace\n(minutes per mile)", x = "Shoes") +
   theme_bw()
 ```
 
+There might be a difference here. To see if there is a statistically-significant difference, I'll run a basic analysis of variance (ANOVA).
+
+```{r}
+anova_shoes <- aov(Pace ~ Activity.Gear, data = shoes_df)
+summary(anova_shoes)
+```
+
+This shows that there is some significant difference in at least two different pairs of shoes, however, this does not tell use which shoes have significantly different average paces. In order to find that information, we will need to use something like Tukey's Honestly Significant Difference Test.
+
+```{r}
+tukey_test <- TukeyHSD(anova_shoes)
+tukey_test
+```
+
+This shows that only two shoes have average paces that are significantly different: the TG3 (Merrill Trail Glove 3), and the Brooks Dyad. This is likely because I purchased the Dyad in order to recover from my planar fasciitis in late 2018.
+
+## Conclusion
+
+I found that, while my pace was getting slower through the beginning of 2019, this is probably because my runs were getting longer and/or I was recovering from an injury. Otherwise, there does not seem to be a significant linear trend through time in terms of my average pace. From this, the take-home lesson seems to be, "Try to avoid an injury."
