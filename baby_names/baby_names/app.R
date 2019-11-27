@@ -19,9 +19,12 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-         textInput("given_name",
-                     "Name to compare:",
-                     placeholder = "Daniel")
+         textInput("given_name1",
+                     "Name to compare:"),
+         textInput("given_name2",
+                   "Name to compare:"),
+         textInput("given_name3",
+                   "Name to compare:")
       ),
       
       # Show a plot of the generated distribution
@@ -48,7 +51,7 @@ server <- function(input, output) {
       # baby_names <- read.csv("NationalNames.csv")
      load("baby_names.RData")
      source("useful.R")
-      compare_new <- dplyr::filter(baby_names,Name == "Lua" | Name == "Ira" | Name == input$given_name) %>% 
+      compare_new <- dplyr::filter(baby_names,Name == input$given_name1 | Name == input$given_name2 | Name == input$given_name3) %>% 
         group_by(Year,Name) %>% 
         dplyr::summarize(Count = sum(Count))
       
@@ -58,7 +61,7 @@ server <- function(input, output) {
         ggtitle("Babies Born in the US") +
         theme_bw() 
       
-      left_right_footnote(my_plot,"Dan Spencer [2018]","https://www.kaggle.com/kaggle/us-baby-names/data")
+      left_right_footnote(my_plot,"Dan Spencer [2019]","https://www.kaggle.com/kaggle/us-baby-names/data")
    })
 }
 
