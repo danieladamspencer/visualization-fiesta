@@ -22,9 +22,14 @@ initial_conditions <- function(n, speed, xlim = c(0,100), ylim = c(0,100), cell_
   return(simulitis_step)
 }
 
-plot.simulitis <- function()
+startup <- initial_conditions(100,0.3)
 
-previous_step <- initial_conditions(100,0.3)
+plot.simulitis <- function(x) {
+  plot(x$state$x, x$state$y, col = c("black","red")[as.numeric(x$state$infected)], 
+       pch = 19, xlim = x$xlim, ylim = x$ylim, xlab = "", ylab = "")
+}
+
+plot(startup)
 
 simulitis_step <- function(previous_step) {
   next_centers <- data.frame(x = state$x + state$delta_x,
