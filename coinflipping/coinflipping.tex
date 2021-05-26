@@ -1,0 +1,37 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+
+\title{Coinflipping for Profit}
+
+\begin{document}
+	\maketitle
+	
+	Consider the following game with two players, Alice and Bob. Behind a curtain, Alice and Bob simultaneously flip biased coins (with probabilities $p_A$ and $p_B$ that they get heads, respectively) until one of them gets heads, and then they turn on a  light that you, the observer, can see. You wouldn't know who got the heads. The light itself comes on after $N$ flips, so what is the probability that Alice got heads? What about the probability that Bob got heads?
+	
+	First, let's think about the distributions for the number of flips that Bob or Alice might make, and call these $X_A$ and $X_B$. These values follow a negative binomial distribution ($X_i \sim \text{Negative Binomial}(r = 1, p = p_i); \quad i = (A,B)$). Thus, the random variable $N$, the number of flips needed to turn on the light can be thought of as
+	
+	$$ N = \min\left(X_A, X_B\right). $$
+	
+	The distribution of $N$ can be found using the definition of the minimum, that is
+	
+	\begin{align*}
+		F_N(n) & = P(N \leq n) \\
+		& = P(\min(X_A,X_B) \leq n) \\
+		& = 1 - P(\min(X_A,X_B) > n).
+	\end{align*}
+
+	Now it's important to think about how the coin flips themselves are independent, so
+	
+	\begin{align*}
+		P(\min(X_A,X_B) > n) & = P(X_A > n) P(X_B > n)
+	\end{align*}
+
+	and 
+	
+	\begin{align*}
+		P(X_A > n) & = \sum_{x = n+1}^\infty \binom{x}{x - 1} (1 - p_A)^{x - 1} p_A \\
+		& =  \sum_{x = n+1}^\infty x (1 - p_A)^{x - 1} p_A
+	\end{align*}
+	
+\end{document}
