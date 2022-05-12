@@ -44,7 +44,7 @@ covid %>%
   geom_text(aes(x = max(dateRep) + 3, y = max_cases, label = country_labels)) +
   scale_x_date(date_breaks = "1 month",
                labels=date_format("%b-%Y"),
-               limits = as.Date(c('2019-12-25','2020-06-01'),"%Y-%m-%d")) +
+               limits = as.Date(c('2019-12-25','2020-07-01'),"%Y-%m-%d")) +
   labs(x = "Date", title = paste("COVID-19","-",format(Sys.time(),"%b %d, %Y"))) +
   theme_bw() +
   theme(legend.position = "none")
@@ -62,7 +62,7 @@ covid %>%
   geom_text_repel(aes(x = max(dateRep) + 3, y = max_deaths, label = country_labels)) +
   scale_x_date(date_breaks = "1 month",
                labels=date_format("%b-%Y"),
-               limits = as.Date(c('2019-12-25','2020-06-01'),"%Y-%m-%d")) +
+               limits = as.Date(c('2019-12-25','2020-07-01'),"%Y-%m-%d")) +
   labs(x = "Date", title = paste("COVID-19","-",format(Sys.time(),"%b %d, %Y"))) +
   # scale_y_log10() +
   theme_bw() +
