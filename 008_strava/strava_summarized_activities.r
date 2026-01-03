@@ -152,3 +152,17 @@ ggplot(weekly_summary) +
     text = element_text(size = 18),
     axis.title.x = element_blank()
   )
+
+# Calculate annual running distance ----
+annual_distance <- activities[, .(Annual_Distance = sum(Distance_miles)), by = Year]
+
+# Plot annual running distance
+ggplot(annual_distance) +
+  geom_col(aes(x = factor(Year), y = Annual_Distance), fill = "orange") +
+  labs(
+    title = "Annual Total Distances of Strava Activities",
+    x = "Year",
+    y = "Total Distance (miles)"
+  ) +
+  theme_minimal() +
+  theme(text = element_text(size = 18))
